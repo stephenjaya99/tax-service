@@ -1,0 +1,34 @@
+version: '3'
+services:
+  db:
+    build: ./
+    image: postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DATABASE_NAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+  app:
+    container_name: app
+    image: golang:latest
+    volumes:
+       - .:/go/src/gitlab.com/stephenjaya99/tax-service
+    working_dir: /go/src/gitlab.com/stephenjaya99/tax-service
+    command: go run main.go
+    ports:
+      - 8000:8000
+    links:
+      - db
+
+  migration:
+    container_name: migration
+    build: .
+    volumes:
+       - .:/go/src/gitlab.com/stephenjaya99/tax-service
+    working_dir: /go/src/gitlab.com/stephenjaya99/tax-service
+    image: golang:latest
+    command: go run migration/main.go
+    links:
+      - db
+    depends_on:
+      - db
+
