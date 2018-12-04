@@ -1,13 +1,13 @@
 version: '3'
 services:
   db:
-    build: ./
     image: postgres
     environment:
       - POSTGRES_DB=${POSTGRES_DATABASE_NAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
   app:
+    build: ./
     container_name: app
     image: golang:latest
     volumes:
