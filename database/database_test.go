@@ -58,7 +58,7 @@ func (ds *DatabaseSuite) TearDownSuite() {
 func (ds *DatabaseSuite) TestCreateTaxOnSuccess() {
 	dummyTax := m.Tax{
 		Name:    "dummy_setup2345",
-		TaxCode: m.TaxCode{Code: 1, Name: "TestCode"},
+		TaxCode: 1,
 		Price:   5000,
 	}
 
@@ -69,10 +69,9 @@ func (ds *DatabaseSuite) TestCreateTaxOnSuccess() {
 
 func (ds *DatabaseSuite) TestCreateTaxInvalidTaxCode() {
 	dummyTax := m.Tax{
-		Name:      "dummy_setup2",
-		TaxCode:   m.TaxCode{Code: 5, Name: "TestCode"},
-		TaxCodeID: 5,
-		Price:     5000,
+		Name:    "dummy_setup2",
+		TaxCode: 5,
+		Price:   5000,
 	}
 
 	_, err := ds.database.CreateTax(dummyTax)

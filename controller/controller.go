@@ -15,7 +15,7 @@ type controller struct {
 // Controller holds the contract of Contoller Interface
 type Controller interface {
 	CreateTax(context.Context, TaxRequest) (m.Tax, error)
-	RetrieveAllTaxes(context.Context) ([]TaxBill, error)
+	RetrieveAllTaxes(context.Context) (TaxBill, error)
 }
 
 type ControllerOpt struct {
@@ -43,7 +43,7 @@ func (c *controller) CreateTax(ctx context.Context, taxData TaxRequest) (m.Tax, 
 	default:
 	}
 
-	tax := m.Tax{Name: taxData.Name, TaxCodeID: taxData.TaxCode, Price: taxData.Price}
+	tax := m.Tax{Name: taxData.Name, TaxCode: taxData.TaxCode, Price: taxData.Price}
 	tax, err := c.database.CreateTax(tax)
 
 	if err != nil {
@@ -53,8 +53,8 @@ func (c *controller) CreateTax(ctx context.Context, taxData TaxRequest) (m.Tax, 
 	return tax, nil
 }
 
-// TaxBill holds the struture of a Bill Object
-type TaxBill struct {
+// TaxDetail holds the struture of a Tax detail
+type TaxDetail struct {
 	Name       string
 	TaxCode    uint
 	TaxType    string
@@ -64,22 +64,30 @@ type TaxBill struct {
 	TotalPrice float64
 }
 
-func (c *controller) createTaxBill(tax m.Tax) TaxBill {
+// TaxBill holds the structure of a Bill object
+type TaxBill struct {
+	TaxDetails    []TaxDetail
+	PriceSubTotal int
+	TaxSubTotal   float64
+	GrandTotal    float64
+}
+
+func (c *controller) createTaxDetail(tax m.Tax) TaxDetail {
 	name := tax.Name
-	// fmt.Println(tax.TaxCode.Code, tax.TaxCode.Name)
-	taxCode := tax.TaxCode.Code
-	taxType := tax.TaxCode.Name
+	taxCode, _ := c.database.RetrieveTaxCodeByCode(tax.TaxCode)
+	taxCodeName := taxCode.Name
+	code := taxCode.Code
 	price := tax.Price
 
 	refundable := true
-	if taxCode != 1 {
+	if code != 1 {
 		refundable = false
 	}
 
 	taxFee := 0.0
-	if taxCode == 1 {
+	if code == 1 {
 		taxFee = float64(price) * 0.1
-	} else if taxCode == 2 {
+	} else if code == 2 {
 		taxFee = 10 + (float64(price) * 0.02)
 	} else {
 		if price >= 100 {
@@ -89,10 +97,10 @@ func (c *controller) createTaxBill(tax m.Tax) TaxBill {
 
 	totalPrice := float64(price) + taxFee
 
-	return TaxBill{
+	return TaxDetail{
 		Name:       name,
-		TaxCode:    taxCode,
-		TaxType:    taxType,
+		TaxCode:    code,
+		TaxType:    taxCodeName,
 		Price:      price,
 		Refundable: refundable,
 		TaxFee:     taxFee,
@@ -101,22 +109,28 @@ func (c *controller) createTaxBill(tax m.Tax) TaxBill {
 }
 
 // RetrieveAllTaxes is a function for getting taxes
-func (c *controller) RetrieveAllTaxes(ctx context.Context) ([]TaxBill, error) {
+func (c *controller) RetrieveAllTaxes(ctx context.Context) (TaxBill, error) {
 	select {
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return TaxBill{}, ctx.Err()
 	default:
 	}
 
 	taxes, err := c.database.RetrieveAllTaxes()
 	if err != nil {
-		return nil, err
+		return TaxBill{}, err
 	}
 
+	priceSubTotal, taxSubTotal, grandTotal := 0, 0.0, 0.0
 	numTaxes := len(taxes)
-	var bills = make([]TaxBill, numTaxes)
+	var bills = make([]TaxDetail, numTaxes)
 	for i, tax := range taxes {
-		bills[i] = c.createTaxBill(tax)
+		bills[i] = c.createTaxDetail(tax)
+		priceSubTotal += bills[i].Price
+		taxSubTotal += bills[i].TaxFee
+		grandTotal += bills[i].TotalPrice
 	}
-	return bills, nil
+
+	taxBill := TaxBill{TaxDetails: bills, PriceSubTotal: priceSubTotal, TaxSubTotal: taxSubTotal, GrandTotal: grandTotal}
+	return taxBill, nil
 }

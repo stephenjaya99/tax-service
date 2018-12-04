@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -25,8 +24,11 @@ type Database interface {
 	// RetrieveAlltaxes should holds implementation retrieving tax from database.
 	RetrieveAllTaxes() ([]m.Tax, error)
 
-	// CreateTaxCode should hols implementation for storing tax code in database
+	// CreateTaxCode should holds implementation for storing tax code in database
 	CreateTaxCode(uint, string) (m.TaxCode, error)
+
+	// RetrieveTaxCodeByCode shoulds imlementation for retrieving tax code object from database by its code
+	RetrieveTaxCodeByCode(uint) (m.TaxCode, error)
 }
 
 // New is used to initiate interface for the DB client
@@ -46,29 +48,18 @@ func (d *database) CreateTax(tax m.Tax) (m.Tax, error) {
 
 	//set created date
 	tax.CreatedAt = time.Now()
-	var taxCode m.TaxCode
-	if err := d.client.Where(&m.TaxCode{Code: tax.TaxCodeID}).First(&taxCode).Error; err != nil {
+
+	if _, err := d.RetrieveTaxCodeByCode(tax.TaxCode); err != nil {
 		return m.Tax{}, err
 	}
-	tax.TaxCode = m.TaxCode{}
-	tax.TaxCodeID = taxCode.Code
 
 	// put tax to database
 	if err := d.client.Where(&m.Tax{Name: tax.Name}).First(&m.Tax{}).Error; err != nil {
-		d.client.Create(&m.Tax{Name: tax.Name, Price: tax.Price, TaxCodeID: tax.TaxCodeID, TaxCode: taxCode})
-
-		var taxes []m.Tax
-		d.client.Find(&taxes)
-		for _, elem := range taxes {
-			fmt.Println(elem.Name, elem.TaxCode.Code, elem.TaxCode.Name)
-		}
+		d.client.Create(&tax)
 	}
 
 	// update tax to latest
 	d.client.Where(&m.Tax{Name: tax.Name}).First(&tax)
-	tax.TaxCode = taxCode
-	fmt.Println("HASIL DB ANJING", tax.Name, tax.TaxCode.Code, tax.TaxCode.Name)
-
 	return tax, nil
 }
 
@@ -88,8 +79,15 @@ func (d *database) RetrieveAllTaxes() ([]m.Tax, error) {
 
 	var taxes []m.Tax
 	d.client.Find(&taxes)
-	for _, elem := range taxes {
-		fmt.Println(elem.Name, elem.TaxCode.Code, elem.TaxCode.Name)
-	}
 	return taxes, nil
+}
+
+func (d *database) RetrieveTaxCodeByCode(code uint) (m.TaxCode, error) {
+
+	var taxCode m.TaxCode
+	if err := d.client.Where(&m.TaxCode{Code: code}).First(&taxCode).Error; err != nil {
+		return m.TaxCode{}, err
+	}
+
+	return taxCode, nil
 }

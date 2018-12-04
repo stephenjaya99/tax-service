@@ -8,11 +8,9 @@ import (
 type Tax struct {
 	ID        uint      `json:"id" gorm:"primary_key"`
 	CreatedAt time.Time `json:"created_at"`
-	Name      string    `json:"name" gorm:"UNIQUE"`
+	Name      string    `json:"name"`
 	Price     int       `json:"price"`
-
-	TaxCode   TaxCode `json:"tax_code" gorm:"foreignkey:TaxCodeID"`
-	TaxCodeID uint    `json:"tax_code_id"`
+	TaxCode   uint      `json:"tax_code"`
 }
 
 // TaxCode model for Tax

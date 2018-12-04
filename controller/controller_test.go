@@ -73,10 +73,10 @@ func (cs *ControllerSuite) TestRetrieveAllTaxesOnSuccess() {
 	defer cancel()
 
 	bills, errs := cs.controller.RetrieveAllTaxes(ctx)
-	assert.Equal(cs.T(), "Burger", bills[0].Name)
-	assert.Equal(cs.T(), "Food", bills[0].TaxType)
-	assert.Equal(cs.T(), 100, int(bills[0].TaxFee))
-	assert.Equal(cs.T(), true, bills[0].Refundable)
+	assert.Equal(cs.T(), "Burger", bills.TaxDetails[0].Name)
+	assert.Equal(cs.T(), "Food", bills.TaxDetails[0].TaxType)
+	assert.Equal(cs.T(), 100, int(bills.TaxDetails[0].TaxFee))
+	assert.Equal(cs.T(), true, bills.TaxDetails[0].Refundable)
 	assert.Nil(cs.T(), errs, "Error should be nil!")
 
 }
@@ -101,6 +101,10 @@ func (dm *DBMock) CreateTaxCode(code uint, name string) (m.TaxCode, error) {
 
 func (dm *DBMock) RetrieveAllTaxes() ([]m.Tax, error) {
 	var taxes = make([]m.Tax, 1)
-	taxes[0] = m.Tax{Name: "Burger", TaxCode: m.TaxCode{Code: 1, Name: "Food"}, Price: 1000}
+	taxes[0] = m.Tax{Name: "Burger", TaxCode: 1, Price: 1000}
 	return taxes, nil
+}
+
+func (dm *DBMock) RetrieveTaxCodeByCode(code uint) (m.TaxCode, error) {
+	return m.TaxCode{Code: 1, Name: "Food"}, nil
 }
