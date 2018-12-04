@@ -1,5 +1,5 @@
 ## Tax Service API Documentation
-Simple Tax Service API. Stacks used :
+Simple Tax Service API. This API uses :
 - Golang (Gin Web Framework, Gorm for ORM, Govendor for handling dependencies)
 - Docker for Containerization (Web API & Database)
 - Postgres for Database
@@ -9,29 +9,53 @@ Simple Tax Service API. Stacks used :
 
 ### Usages
 - `docker-compose up` will start pulling and creating container for database, web api, and migration 
-- `make test` will run unit test and calculate the code coverage
+- `make test` will run unit test and calculate code coverage
 - Web API will available at `localhost:8000`
 
 ### API Calls
-### `GET /tax` Response
+### `GET /tax` 
+#### Response
 ```json
 {
-  "Meta": {
-      "Code": 200,
-      "Message": "Success",
-      "Error": ""
-  },
-  "Body": [
-      {
-        "Name": "Burger",
-        "TaxCode": 1,
-        "TaxType": "Food",
-        "Refundable": true,
-        "Price": 1000,
-        "TaxFee": 100,
-        "TotalPrice": 1100
-      }
-  ]
+    "Meta": {
+        "Code": 200,
+        "Message": "Success",
+        "Error": ""
+    },
+    "Body": {
+        "TaxDetails": [
+            {
+                "Name": "Entertaiment",
+                "TaxCode": 3,
+                "TaxType": "Entertainment",
+                "Refundable": false,
+                "Price": 150,
+                "TaxFee": 0.5,
+                "TotalPrice": 150.5
+            },
+            {
+                "Name": "Tobacco",
+                "TaxCode": 2,
+                "TaxType": "Tobacco",
+                "Refundable": false,
+                "Price": 1000,
+                "TaxFee": 30,
+                "TotalPrice": 1030
+            },
+            {
+                "Name": "Burger",
+                "TaxCode": 1,
+                "TaxType": "Food",
+                "Refundable": true,
+                "Price": 1000,
+                "TaxFee": 100,
+                "TotalPrice": 1100
+            }
+        ],
+        "PriceSubTotal": 2150,
+        "TaxSubTotal": 130.5,
+        "GrandTotal": 2280.5
+    }
 }
 ```
 
@@ -39,7 +63,7 @@ Simple Tax Service API. Stacks used :
 #### Request
 ```JSON
 {
-	"name": "Burger",
+	"name":"Burger",
 	"tax_code": 1,
 	"price": 1000
 }
@@ -51,22 +75,18 @@ Simple Tax Service API. Stacks used :
 #### Response
 ```JSON
 {
-  "Meta": {
-      "Code": 200,
-      "Message": "Success",
-      "Error": ""
-  },
-  "Body": {
-      "id": 2,
-      "created_at": "2018-12-03T22:07:25.174399Z",
-      "name": "KFC",
-      "price": 200,
-      "tax_code": {
-          "code": 1,
-          "name": "Food"
-      },
-      "tax_code_id": 1
-  }
+    "Meta": {
+        "Code": 200,
+        "Message": "Success",
+        "Error": ""
+    },
+    "Body": {
+        "id": 3,
+        "created_at": "2018-12-04T17:45:39.751766Z",
+        "name": "Burger",
+        "price": 1000,
+        "tax_code": 1
+    }
 }
 ```
 - Simple API structure for recieving list of taxes
@@ -79,11 +99,9 @@ Simple Tax Service API. Stacks used :
 type Tax struct {
 	ID        uint      `json:"id" gorm:"primary_key"`
 	CreatedAt time.Time `json:"created_at"`
-	Name      string    `json:"name" gorm:"UNIQUE"`
+	Name      string    `json:"name"`
 	Price     int       `json:"price"`
-
-	TaxCode   TaxCode `json:"tax_code" gorm:"foreignkey:TaxCodeID"`
-	TaxCodeID uint    `json:"tax_code_id"`
+	TaxCode   uint      `json:"tax_code"`
 }
 
 // TaxCode model for Tax
@@ -96,4 +114,10 @@ type TaxCode struct {
 - `Tax` Object represents the Tax from the user, with a foreign key to a Tax Code
 - `Tax Code` are made into seperate table for cases if it needs an additional tax codes
 - Using Golang ORM library `Gorm`, Database objects will be handled by `database` package (M in MVC pattern)
-- Data migration are handler in `migration` packages, also by using `Gorm` for auto migration on modified tables
+- Data migration are handler in `migration` packages, also using `Gorm` for auto migration on modified tables
+
+### Misc
+- Spend 4 Days for creating the API, mostly spent on ~learning~ debugging Golang and Docker :v
+- Excited to learn more about best practices using Docker & Dockerfile
+- Gorm Postgres for some weird reason won't create related objects (Will create using default values) :")
+- Workout for above is by not using Gorm foreign key definition, instead just create an additional column for references
