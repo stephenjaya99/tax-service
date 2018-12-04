@@ -12,6 +12,36 @@ Simple Tax Service API. This API uses :
 - `make test` will run unit test and calculate code coverage
 - Web API will available at `localhost:8000`
 
+### Project Structure
+```
+|----
+   |---- controller
+        |----
+   |---- database
+        |----
+   |---- handler
+        |----
+   |---- migration
+        |----
+   |---- model
+        |----
+   |---- scripts
+        |----
+   |---- vendor
+        |----
+   |----docker-compose.yml
+   |----Dockerfile
+   |----Makefile
+   |----main.go
+```
+- `database` package holds packages reponsible for manipulating database models, using Golang ORM library `Gorm`
+- `handler` package holds packages for recieving HTTP requests and returning response, using Golang Web HTTP library `Gin`
+- `controller` package holds packages for connecting the needs for `database` and `handler`, such example is serializing request objects for database, or serializing database results to handler
+- `migration` package holds packages needed for migrating database models or seed initial data
+- `model` package holds database model definition
+- `scripts` package holds miscellaneous scripts (for testing, docker, etc)
+- `vendor` package holds dependencies for this project, using `Govendor` library
+
 ### API Calls
 ### `GET /tax` 
 #### Response
@@ -72,7 +102,7 @@ Simple Tax Service API. This API uses :
 - `tax_code` : `Integer`
 - `price` : `Integer`
 
-#### Response
+#### Response (Success, 201 Status Code)
 ```JSON
 {
     "Meta": {
@@ -89,9 +119,19 @@ Simple Tax Service API. This API uses :
     }
 }
 ```
+#### Response (Failed, 404 Not Found)
+```JSON
+{
+    "Meta": {
+        "Code": 520,
+        "Message": "Controller Error",
+        "Error": "record not found"
+    },
+    "Body": null
+}
+```
 - Simple API structure for recieving list of taxes
-- Requests is handled by `handler` package using Golang Web HTTP library `Gin` for recieving POST requests and returning response (V in MVC Pattern) 
-- Serialization are handled in `controller` package for `database` and `handler` (C in MVC Pattern)
+- Failed Response is returned if TaxCode is other than defined (1, 2, and 3)
 
 ### Database Documentation
 ```Golang
@@ -113,7 +153,6 @@ type TaxCode struct {
 
 - `Tax` Object represents the Tax from the user, with a foreign key to a Tax Code
 - `Tax Code` are made into seperate table for cases if it needs an additional tax codes
-- Using Golang ORM library `Gorm`, Database objects will be handled by `database` package (M in MVC pattern)
 - Data migration are handler in `migration` packages, also using `Gorm` for auto migration on modified tables
 
 ### Misc

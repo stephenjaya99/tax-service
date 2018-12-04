@@ -18,7 +18,4 @@ var (
 	metaJSONDecodeError = meta{Code: 462, Message: "Json decoding Error"}
 
 	metaControllerError = meta{Code: 520, Message: "Controller Error"}
-	metaFileNotFound    = meta{Code: 521, Message: "Error when retrieving file"}
-	metaFileOpenError   = meta{Code: 522, Message: "Error when opening file"}
-	metaFileParseError  = meta{Code: 523, Message: "Error when parsing file"}
 )

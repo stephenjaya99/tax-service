@@ -79,7 +79,7 @@ func (h *handler) CreateTax(ctx *gin.Context) {
 		m := metaControllerError
 		m.Error = err.Error()
 		resp := &response{m, nil}
-		ctx.JSON(500, resp)
+		ctx.JSON(404, resp)
 		return
 	}
 
